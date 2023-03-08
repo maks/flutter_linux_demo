@@ -5,10 +5,14 @@ import 'package:flutter_linux_demo/nasa_apod_service.dart';
 // a global for now but really needs to be in a Provider
 const apiKey = String.fromEnvironment("API_KEY", defaultValue: "DEMO_KEY");
 
+final apiService = NasaAPODService(apiKey);
+
 void main() {
   debugPrint(("using API KEY: $apiKey"));
 
   runApp(const MyApp());
+
+  apiService.close();
 }
 
 class MyApp extends StatelessWidget {
@@ -17,7 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'NASA APOD',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -48,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             FutureBuilder<List<NasaAPODEntry>>(
-                future: NasaAPODService(apiKey).fetchEntries(),
+                future: apiService.fetchEntries(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     final List<NasaAPODEntry> entries = snapshot.data!;
@@ -62,7 +66,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               subtitle: Text(entries[i].date ?? ""),
                               onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => APODDetails(entry: entries[i]),
+                                  builder: (context) => APODDetails(
+                                    entry: entries[i],
+                                    isFavourited: false,
+                                  ),
                                 ),
                               ),
                             );
@@ -82,8 +89,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class APODDetails extends StatelessWidget {
   final NasaAPODEntry entry;
+  final bool isFavourited;
 
-  const APODDetails({super.key, required this.entry});
+  const APODDetails({
+    super.key,
+    required this.entry,
+    required this.isFavourited,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +105,6 @@ class APODDetails extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          Text(entry.title ?? ""),
           Image.network(
             entry.url ?? "",
             loadingBuilder: (context, child, loadingProgress) {
@@ -102,6 +113,19 @@ class APODDetails extends StatelessWidget {
                 child: CircularProgressIndicator(),
               );
             },
+          ),
+          Align(
+            alignment: Alignment.topRight,
+            child: IconButton(
+              icon: Icon(
+                isFavourited ? Icons.star_outlined : Icons.star_border,
+                color: Colors.amberAccent,
+              ),
+              onPressed: () {
+                print("fav: ${entry.title}");
+                apiService.favourite(entry);
+              },
+            ),
           ),
         ],
       ),
