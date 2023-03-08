@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Flutter Linux Demo
+Comment=Nasa APOD with notifications and a badge counter
+Keywords=example;
+Exec=flutter-linux-demo
+Icon=${SNAP}/meta/gui/flutter-linux-demo.png
+Terminal=false
+Categories=System;

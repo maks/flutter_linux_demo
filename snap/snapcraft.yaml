@@ -1,0 +1,30 @@
+name: flutter-linux-demo
+version: 0.1.0
+summary: Flutter Linux Demo
+description: Flutter Linux demo app
+
+confinement: strict
+base: core18
+grade: stable
+
+slots:
+  dbus-flutter-linux-demo: # adjust accordingly to your app name
+    interface: dbus
+    bus: session
+    name: flutter.linux.demo # adjust accordingly to your app name
+
+apps:
+  flutter-linux-demo:
+    command: flutter_linux_demo
+    extensions: [flutter-stable] # Where "stable" defines which Flutter channel to use for the build
+    plugs:
+    - network
+    - unity7
+    slots:
+      - dbus-flutter-linux-demo
+
+parts:
+  flutter-linux-sample:
+    source: .
+    plugin: flutter
+    flutter-target: lib/main.dart # The main entry-point file of the application

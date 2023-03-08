@@ -33,6 +33,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.5
+  launcher_entry: ^0.1.1
   shared_preferences: ^2.0.18
 
 dev_dependencies:

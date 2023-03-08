@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:desktop_notifications/desktop_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:launcher_entry/launcher_entry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _apiAuthority = "api.nasa.gov";
@@ -13,7 +14,16 @@ class NasaAPODService {
 
   final _notifications = NotificationsClient();
 
-  int _prevNotificationId = 1;
+  int _prevNotificationId = 0;
+  List<NasaAPODEntry>? _entriesCache;
+
+  Future<int> get favouritesCount async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_entriesCache == null) {
+      return 0;
+    }
+    return _entriesCache!.where((element) => prefs.getBool(element.date ?? '') ?? false).toList().length;
+  }
 
   NasaAPODService(this._apiKey);
 
@@ -31,7 +41,8 @@ class NasaAPODService {
       final entries = jsonDecode(response.body) as List;
 
       final list = entries.map((e) => NasaAPODEntry.fromMap(e)).toList();
-
+      _entriesCache = list;
+      
       return list;
     } else {
       throw Exception('Failed to load APOD data: ${response.statusCode}:${response.reasonPhrase}');
@@ -56,11 +67,32 @@ class NasaAPODService {
       throw Exception("cannot persist favourite, missing entry date");
     }
     await prefs.setBool(id, favourite);
+
+    final count = await favouritesCount;
+    _updateLauncherBadge(count);
   }
 
   Future<void> close() async {
     await _notifications.close();
     debugPrint("shutdown notification client");
+  }
+
+
+  void _updateLauncherBadge(int count) {
+    // For use with Snap need to use Snap .desktop file naming convention and override the
+    // object path because default object path created by `LauncherEntryService` class creates
+    // a negative number suffix which doesn't pass the apparmor rule used by Snap
+    final service = LauncherEntryService(
+        appUri: 'application://flutter-linux-demo_flutter-linux-demo.desktop',
+        objectPath: "/com/canonical/unity/launcherentry/1");
+
+    service.update(
+      count: count,
+      countVisible: true,
+      progress: 0,
+      progressVisible: false,
+      urgent: true,
+    );
   }
 }
 
