@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_linux_demo/nasa_apod_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // comes from a `--dart-define=API_KEY=my-nasa-api-key` when building this app
 // a global for now but really needs to be in a Provider
@@ -7,8 +8,13 @@ const apiKey = String.fromEnvironment("API_KEY", defaultValue: "DEMO_KEY");
 
 final apiService = NasaAPODService(apiKey);
 
-void main() {
+late final SharedPreferences prefs;
+
+void main() async {
   debugPrint(("using API KEY: $apiKey"));
+
+  WidgetsFlutterBinding.ensureInitialized();
+  prefs = await SharedPreferences.getInstance();  
 
   runApp(const MyApp());
 
@@ -68,7 +74,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                 MaterialPageRoute(
                                   builder: (context) => APODDetails(
                                     entry: entries[i],
-                                    isFavourited: false,
                                   ),
                                 ),
                               ),
@@ -87,48 +92,61 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class APODDetails extends StatelessWidget {
+class APODDetails extends StatefulWidget {
   final NasaAPODEntry entry;
-  final bool isFavourited;
 
   const APODDetails({
     super.key,
     required this.entry,
-    required this.isFavourited,
   });
+
+  @override
+  State<APODDetails> createState() => _APODDetailsState();
+}
+
+class _APODDetailsState extends State<APODDetails> {
+  late bool isFavourited;
+
+  @override
+  void initState() {
+    super.initState();
+    isFavourited = prefs.getBool(widget.entry.date ?? '') ?? false;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(entry.title ?? ""),
+          title: Text(widget.entry.title ?? ""),
       ),
-      body: Stack(
-        children: [
-          Image.network(
-            entry.url ?? "",
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            },
-          ),
-          Align(
-            alignment: Alignment.topRight,
-            child: IconButton(
-              icon: Icon(
-                isFavourited ? Icons.star_outlined : Icons.star_border,
-                color: Colors.amberAccent,
-              ),
-              onPressed: () {
-                print("fav: ${entry.title}");
-                apiService.favourite(entry);
+        body: Stack(
+          children: [
+            Image.network(
+              widget.entry.url ?? "",
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
               },
             ),
-          ),
-        ],
-      ),
-    );
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                icon: Icon(
+                  isFavourited ? Icons.star_outlined : Icons.star_border,
+                  color: Colors.amberAccent,
+                ),
+                onPressed: () async {
+                  debugPrint("fav: ${widget.entry.title}");
+                  await apiService.favourite(widget.entry, !isFavourited);
+                  setState(() {
+                    isFavourited = !isFavourited;
+                  });
+                },
+              ),
+            ),
+          ],
+        ));
   }
 }

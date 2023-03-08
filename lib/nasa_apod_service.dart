@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:desktop_notifications/desktop_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _apiAuthority = "api.nasa.gov";
 const _apiEndPoint = "/planetary/apod";
@@ -37,15 +38,24 @@ class NasaAPODService {
     }
   }
 
-  Future<void> favourite(NasaAPODEntry entry) async {
+  Future<void> favourite(NasaAPODEntry entry, bool favourite) async {
+    final action = favourite == false ? "UnFavourited" : "Favourited";
     final n = await _notifications.notify(
-      'Favourited: ${entry.title}',
+      '$action: ${entry.title}',
       appName: 'NASA APOD',
       expireTimeoutMs: 3000,
       replacesId: _prevNotificationId,
     );
     // save id as we want to replace each notification with any future ones
     _prevNotificationId = n.id;
+
+    // now persist to local data
+    final prefs = await SharedPreferences.getInstance();
+    final id = entry.date;
+    if (id == null) {
+      throw Exception("cannot persist favourite, missing entry date");
+    }
+    await prefs.setBool(id, favourite);
   }
 
   Future<void> close() async {
