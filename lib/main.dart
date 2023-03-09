@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_linux_demo/nasa_api_service.dart';
 import 'package:flutter_linux_demo/nasa_apod_service.dart';
 import 'package:flutter_linux_demo/preferences_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // comes from a `--dart-define=API_KEY=my-nasa-api-key` when building this app
 // a global for now but really needs to be in a Provider
-const apiKey = String.fromEnvironment("API_KEY", defaultValue: "DEMO_KEY");
+const _apiKey = String.fromEnvironment("API_KEY", defaultValue: "DEMO_KEY");
 
-late final NasaAPODService apiService;
+late final NasaAPODService apodService;
 
 late final PreferencesService prefsService;
 
 void main() async {
-  debugPrint(("using API KEY: $apiKey"));
+  debugPrint(("using API KEY: $_apiKey"));
+  final apiService = NasaApiService(_apiKey);
 
   WidgetsFlutterBinding.ensureInitialized();
   prefsService = SharedPreferencesService(await SharedPreferences.getInstance());
-  apiService = NasaAPODService(apiKey, prefsService);
+  apodService = NasaAPODService(prefsService, apiService);
 
   runApp(const MyApp());
 
-  apiService.close();
+  apodService.close();
 }
 
 class MyApp extends StatelessWidget {
@@ -60,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             FutureBuilder<List<NasaAPODEntry>>(
-                future: apiService.fetchEntries(),
+                future: apodService.fetchEntries(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     final List<NasaAPODEntry> entries = snapshot.data!;
@@ -142,7 +144,7 @@ class _APODDetailsState extends State<APODDetails> {
                 ),
                 onPressed: () async {
                   debugPrint("fav: ${widget.entry.title}");
-                  await apiService.favourite(widget.entry, !isFavourited);
+                  await apodService.favourite(widget.entry, !isFavourited);
                   setState(() {
                     isFavourited = !isFavourited;
                   });

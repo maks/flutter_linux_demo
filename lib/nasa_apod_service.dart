@@ -2,18 +2,15 @@ import 'dart:convert';
 
 import 'package:desktop_notifications/desktop_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linux_demo/nasa_api_service.dart';
 import 'package:flutter_linux_demo/preferences_service.dart';
-import 'package:http/http.dart' as http;
-import 'package:launcher_entry/launcher_entry.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-const _apiAuthority = "api.nasa.gov";
-const _apiEndPoint = "/planetary/apod";
+import 'package:launcher_entry/launcher_entry.dart';
 
 class NasaAPODService {
-  final String _apiKey;
   final _notifications = NotificationsClient();
   final PreferencesService _prefsService;
+  final NasaApiService _apiService;
 
   int _prevNotificationId = 0;
   List<NasaAPODEntry>? _entriesCache;
@@ -25,28 +22,18 @@ class NasaAPODService {
     return _entriesCache!.where((e) => _prefsService.isFavourite(e)).toList().length;
   }
 
-  NasaAPODService(this._apiKey, this._prefsService);
+  NasaAPODService(this._prefsService, this._apiService);
 
   Future<List<NasaAPODEntry>> fetchEntries() async {
     final startDate = DateTime.now().subtract(const Duration(days: 4)); // 5 most recent images
-    final dateStr = "${startDate.year}-${startDate.month}-${startDate.day}";
-    final queryParameters = {
-      "api_key": _apiKey,
-      "start_date": dateStr,
-    };
 
-    final response = await http.get(Uri.https(_apiAuthority, _apiEndPoint, queryParameters));
+    final responseText = await _apiService.getAPODList(startDate);
+    final entries = jsonDecode(responseText) as List;
 
-    if (response.statusCode == 200) {
-      final entries = jsonDecode(response.body) as List;
+    final list = entries.map((e) => NasaAPODEntry.fromMap(e)).toList();
+    _entriesCache = list;
 
-      final list = entries.map((e) => NasaAPODEntry.fromMap(e)).toList();
-      _entriesCache = list;
-      
-      return list;
-    } else {
-      throw Exception('Failed to load APOD data: ${response.statusCode}:${response.reasonPhrase}');
-    }
+    return list;
   }
 
   Future<void> favourite(NasaAPODEntry entry, bool favourite) async {
@@ -61,12 +48,7 @@ class NasaAPODService {
     _prevNotificationId = n.id;
 
     // now persist to local data
-    final prefs = await SharedPreferences.getInstance();
-    final id = entry.date;
-    if (id == null) {
-      throw Exception("cannot persist favourite, missing entry date");
-    }
-    await prefs.setBool(id, favourite);
+    _prefsService.favourite(entry, favourite);
 
     final count = await favouritesCount;
     _updateLauncherBadge(count);
@@ -76,7 +58,6 @@ class NasaAPODService {
     await _notifications.close();
     debugPrint("shutdown notification client");
   }
-
 
   void _updateLauncherBadge(int count) {
     // For use with Snap need to use Snap .desktop file naming convention and override the

@@ -5,7 +5,7 @@ import 'package:flutter_linux_demo/nasa_apod_service.dart';
 abstract class PreferencesService {
   bool isFavourite(NasaAPODEntry entry);
 
-  void favourite(NasaAPODEntry entry, bool isFavourited);
+  Future<void> favourite(NasaAPODEntry entry, bool isFavourited);
 }
 
 class SharedPreferencesService implements PreferencesService {
@@ -19,7 +19,11 @@ class SharedPreferencesService implements PreferencesService {
   bool isFavourite(NasaAPODEntry entry) => _prefs.getBool(entry.date ?? '') ?? false;
 
   @override
-  void favourite(NasaAPODEntry entry, bool isFavourited) {
-    _prefs.getBool(entry.date ?? '') ?? false;
+  Future<void> favourite(NasaAPODEntry entry, bool isFavourited) async {
+    final id = entry.date;
+    if (id == null) {
+      throw Exception("cannot persist favourite, missing entry date");
+    }
+    await _prefs.setBool(id, isFavourited);
   }
 }
