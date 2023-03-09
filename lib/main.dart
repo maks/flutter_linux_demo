@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_linux_demo/nasa_apod_service.dart';
+import 'package:flutter_linux_demo/preferences_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // comes from a `--dart-define=API_KEY=my-nasa-api-key` when building this app
 // a global for now but really needs to be in a Provider
 const apiKey = String.fromEnvironment("API_KEY", defaultValue: "DEMO_KEY");
 
-final apiService = NasaAPODService(apiKey);
+late final NasaAPODService apiService;
 
-late final SharedPreferences prefs;
+late final PreferencesService prefsService;
 
 void main() async {
   debugPrint(("using API KEY: $apiKey"));
 
   WidgetsFlutterBinding.ensureInitialized();
-  prefs = await SharedPreferences.getInstance();  
+  prefsService = SharedPreferencesService(await SharedPreferences.getInstance());
+  apiService = NasaAPODService(apiKey, prefsService);
 
   runApp(const MyApp());
 
@@ -111,7 +113,7 @@ class _APODDetailsState extends State<APODDetails> {
   @override
   void initState() {
     super.initState();
-    isFavourited = prefs.getBool(widget.entry.date ?? '') ?? false;
+    isFavourited = prefsService.isFavourite(widget.entry);
   }
 
   @override

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:desktop_notifications/desktop_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linux_demo/preferences_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:launcher_entry/launcher_entry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,21 +12,20 @@ const _apiEndPoint = "/planetary/apod";
 
 class NasaAPODService {
   final String _apiKey;
-
   final _notifications = NotificationsClient();
+  final PreferencesService _prefsService;
 
   int _prevNotificationId = 0;
   List<NasaAPODEntry>? _entriesCache;
 
   Future<int> get favouritesCount async {
-    final prefs = await SharedPreferences.getInstance();
     if (_entriesCache == null) {
       return 0;
     }
-    return _entriesCache!.where((element) => prefs.getBool(element.date ?? '') ?? false).toList().length;
+    return _entriesCache!.where((e) => _prefsService.isFavourite(e)).toList().length;
   }
 
-  NasaAPODService(this._apiKey);
+  NasaAPODService(this._apiKey, this._prefsService);
 
   Future<List<NasaAPODEntry>> fetchEntries() async {
     final startDate = DateTime.now().subtract(const Duration(days: 4)); // 5 most recent images
