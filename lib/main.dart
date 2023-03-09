@@ -62,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     final List<NasaAPODEntry> entries = snapshot.data!;
-
+                    
                     return Expanded(
                       child: ListView.builder(
                           itemCount: entries.length,
@@ -81,9 +81,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           }),
                     );
                   } else if (snapshot.hasError) {
-                    debugPrint("err: ${snapshot.error}");
+                    return Center(child: Text("Error: ${snapshot.error}"));
+                  } else {
+                    return const Center(child: CircularProgressIndicator());
                   }
-                  return Container();
                 }),
           ],
         ),
