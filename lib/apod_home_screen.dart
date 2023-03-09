@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_linux_demo/preferences_service.dart';
 
 import 'apod_details_screen.dart';
 import 'main.dart';
 import 'nasa_apod_service.dart';
 
 class ApodHomeScreen extends StatefulWidget {
-  const ApodHomeScreen({super.key, required this.title});
+  const ApodHomeScreen({super.key, required this.title, required this.prefsService});
 
   final String title;
+  final PreferencesService prefsService;
 
   @override
   State<ApodHomeScreen> createState() => _ApodHomeScreenState();
@@ -41,6 +43,7 @@ class _ApodHomeScreenState extends State<ApodHomeScreen> {
                                 MaterialPageRoute(
                                   builder: (context) => APODDetailsScreen(
                                     entry: entries[i],
+                                    prefsService: widget.prefsService,
                                   ),
                                 ),
                               ),

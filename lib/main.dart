@@ -11,15 +11,15 @@ const _apiKey = String.fromEnvironment("API_KEY", defaultValue: "DEMO_KEY");
 
 late final NasaAPODService apodService;
 
-late final PreferencesService prefsService;
+late final PreferencesService _prefsService;
 
 void main() async {
   debugPrint(("using API KEY: $_apiKey"));
   final apiService = NasaApiService(_apiKey);
 
   WidgetsFlutterBinding.ensureInitialized();
-  prefsService = SharedPreferencesService(await SharedPreferences.getInstance());
-  apodService = NasaAPODService(prefsService, apiService);
+  _prefsService = SharedPreferencesService(await SharedPreferences.getInstance());
+  apodService = NasaAPODService(_prefsService, apiService);
 
   runApp(const NasaAPODApp());
 
@@ -36,7 +36,10 @@ class NasaAPODApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const ApodHomeScreen(title: 'NASA APOD'),
+      home: ApodHomeScreen(
+        title: 'NASA APOD',
+        prefsService: _prefsService,
+      ),
     );
   }
 }

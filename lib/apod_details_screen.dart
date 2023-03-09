@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_linux_demo/preferences_service.dart';
 
 import 'main.dart';
 import 'nasa_apod_service.dart';
 
 class APODDetailsScreen extends StatefulWidget {
   final NasaAPODEntry entry;
+  final PreferencesService prefsService;
 
   const APODDetailsScreen({
     super.key,
     required this.entry,
+    required this.prefsService,   
   });
 
   @override
@@ -21,7 +24,7 @@ class _APODDetailsScreenState extends State<APODDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    isFavourited = prefsService.isFavourite(widget.entry);
+    isFavourited = widget.prefsService.isFavourite(widget.entry);
   }
 
   @override

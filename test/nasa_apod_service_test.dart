@@ -1,9 +1,8 @@
-import 'package:flutter_linux_demo/nasa_api_service.dart';
 import 'package:flutter_linux_demo/nasa_apod_service.dart';
-import 'package:flutter_linux_demo/preferences_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'mocks.dart';
 import 'nasa_api_test_data.dart';
 
 void main() {
@@ -45,7 +44,3 @@ void main() {
     expect(await subject.favouritesCount, 3);
   });
 }
-
-class MockPreferencesService extends Mock implements PreferencesService {}
-
-class MockNasaApiService extends Mock implements NasaApiService {}
