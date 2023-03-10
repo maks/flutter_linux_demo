@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_linux_demo/apod_details_screen.dart';
 import 'package:flutter_linux_demo/nasa_apod_service.dart';
 import 'package:flutter_test/flutter_test.dart';
