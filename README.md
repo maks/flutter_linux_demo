@@ -1,16 +1,12 @@
-# flutter_linux_demo
+# flutter linux demo
 
-A new Flutter project.
+A demonstration of a Flutter Linux desktop app.
 
-## Getting Started
+Includes demonstations of how to integrate with Linux desktop features such as desktop icon and indicators (on Ubuntu) as well as generating a deployable app via Snap.
 
-This project is a starting point for a Flutter application.
+See for more details the [slidedeck from the workshop](Flutter Linux apps from Scratch.pdf) that was used to present this app.
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
+
